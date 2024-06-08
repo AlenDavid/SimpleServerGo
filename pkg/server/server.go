@@ -37,8 +37,8 @@ func handleConnection(conn net.Conn) {
 	}
 }
 
-func Listen() {
-	addr, err := net.ResolveTCPAddr("tcp", ":8000")
+func Listen(address string) {
+	addr, err := net.ResolveTCPAddr("tcp", address)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -50,7 +50,7 @@ func Listen() {
 
 	defer ln.Close()
 
-	fmt.Println("Listening on port 8000")
+	fmt.Println("Listening on port ", addr.Port)
 	for {
 		conn, err := ln.Accept()
 		if err != nil {
