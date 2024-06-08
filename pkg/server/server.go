@@ -5,6 +5,8 @@ import (
 	"log"
 	"net"
 	"os"
+
+	"github.com/alendavid/simple_server_go/pkg/response"
 )
 
 func handleConnection(conn net.Conn) {
@@ -27,9 +29,11 @@ func handleConnection(conn net.Conn) {
 			return
 		}
 
-		data := "HTTP/1.1 200 OK\n" + "Content-Type: text/html\n" + fmt.Sprintf("Content-Length: %d\n\n", len(content))
+		b := response.Create(content).Build()
 
-		_, err = conn.Write(append([]byte(data), content...))
+		fmt.Print(string(b))
+
+		_, err = conn.Write(b)
 		if err != nil {
 			log.Println("conn.Write: ", err)
 			return
