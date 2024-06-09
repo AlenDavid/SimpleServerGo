@@ -12,6 +12,17 @@ type Response struct {
 	Status  int
 }
 
+func Err(err error) Response {
+	return Response{
+		Headers: map[string]string{
+			"Date":         time.Now().String(),
+			"Content-Type": "text/plain",
+		},
+		Content: []byte(err.Error()),
+		Status:  500,
+	}
+}
+
 func Create(content []byte) Response {
 	return Response{
 		Headers: map[string]string{

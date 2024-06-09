@@ -3,7 +3,7 @@ package request
 import (
 	"errors"
 	"io"
-	"slices"
+	"regexp"
 	"strings"
 )
 
@@ -16,19 +16,24 @@ type Request struct {
 var errMalformed = errors.New("not HTTP")
 var errMalformedHeader = errors.New("invalid Header")
 
+var lineBreak = regexp.MustCompile("(\r)*(\n)")
+
 func Parse(r io.Reader) (Request, error) {
-	buf, err := io.ReadAll(r)
+	buf := make([]byte, 1024)
+
+	_, err := r.Read(buf)
 	if err != nil {
 		return Request{}, err
 	}
 
 	look := 0
-	carriage := slices.Index(buf, byte('\n'))
-	if carriage == -1 || len(buf) <= carriage {
+	bk := lineBreak.FindIndex(buf)
+	if bk == nil {
 		return Request{}, errMalformed
 	}
 
-	line := string(buf[look:carriage])
+	carriage := bk[1]
+	line := string(buf[look:bk[0]])
 
 	parts := strings.Split(line, " ")
 	if len(parts) != 3 {
@@ -38,14 +43,15 @@ func Parse(r io.Reader) (Request, error) {
 	headers := map[string]string{}
 
 	for {
-		look = carriage + 1
+		look = carriage
 		buf = buf[look:]
-		carriage = slices.Index(buf, '\n')
 
-		if carriage == -1 {
-			line = string(buf)
+		bk := lineBreak.FindIndex(buf)
+		if bk != nil {
+			carriage = bk[1]
+			line = string(buf[:bk[0]])
 		} else {
-			line = string(buf[:carriage])
+			line = string(buf)
 		}
 
 		if line == "" {
@@ -58,10 +64,6 @@ func Parse(r io.Reader) (Request, error) {
 		}
 
 		headers[before] = after
-
-		if carriage == -1 {
-			break
-		}
 	}
 
 	return Request{
