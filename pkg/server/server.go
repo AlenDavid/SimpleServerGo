@@ -27,17 +27,25 @@ func handleConnection(conn net.Conn) {
 			return
 		}
 
-		fmt.Printf("[%s] %s", req.Method, req.Path)
+		fmt.Printf("[%s] %s\n", req.Method, req.Path)
+
+		if req.Path == "" {
+			req.Path = "index.html"
+		}
 
 		content, err := os.ReadFile("./public" + path.Clean("/"+req.Path))
 		if err != nil {
-			log.Println(err)
-
-			_, err = conn.Write(response.Err(err).Build())
+			content, err := os.ReadFile("./public/404.html")
 			if err != nil {
 				log.Println(err)
+				return
 			}
-			return
+
+			_, err = conn.Write(response.Create(content).Build())
+			if err != nil {
+				log.Println(err)
+				return
+			}
 		}
 
 		_, err = conn.Write(response.Create(content).Build())
