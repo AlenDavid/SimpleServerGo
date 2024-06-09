@@ -6,22 +6,21 @@ import (
 	"net"
 	"os"
 
+	"github.com/alendavid/simple_server_go/pkg/request"
 	"github.com/alendavid/simple_server_go/pkg/response"
 )
 
 func handleConnection(conn net.Conn) {
 	defer conn.Close()
 
-	buf := make([]byte, 1024)
-
 	for {
-		n, err := conn.Read(buf)
+		req, err := request.Parse(conn)
 		if err != nil {
 			log.Println(err)
 			return
 		}
 
-		fmt.Printf("Received: %s", string(buf[:n]))
+		fmt.Printf("[%s] %s", req.Method, req.Path)
 
 		content, err := os.ReadFile("./public/index.html")
 		if err != nil {
