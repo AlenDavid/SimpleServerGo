@@ -3,12 +3,20 @@
 <head>
   <meta charset='utf-8'>
   <meta http-equiv='X-UA-Compatible' content='IE=edge'>
-  <title>Oops</title>
+  <title>root.html</title>
   <meta name='viewport' content='width=device-width, initial-scale=1'>
 </head>
 <body>
   <h1>Oops!</h1>
   <p>Page not found.</p>
   <p><a href="/index.html">Go back to index.html page.</a></p>
+  <p>
+    <h2>Entries:</h2>
+    {{range .}}
+      <p>
+        <a href="{{.}}">{{.}}</a>
+      </p>
+    {{end}}
+  </p>
 </body>
 </html>
