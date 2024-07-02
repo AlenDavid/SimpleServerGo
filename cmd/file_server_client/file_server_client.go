@@ -1,9 +1,13 @@
 package main
 
 import (
+	"bytes"
 	"flag"
 	"fmt"
+	"io"
 	"net"
+	"os"
+	"strconv"
 )
 
 func handleConnection() *net.TCPConn {
@@ -20,6 +24,42 @@ func handleConnection() *net.TCPConn {
 	return conn
 }
 
+func handleList() {
+	conn := handleConnection()
+
+	_, err := conn.Write([]byte("list"))
+	if err != nil {
+		panic(err)
+	}
+
+	buf := make([]byte, 1024*1024)
+
+	_, err = conn.Read(buf)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(string(buf))
+}
+
+func handleDown(pos int) {
+	conn := handleConnection()
+
+	_, err := conn.Write([]byte(fmt.Sprintf("down %d ", pos)))
+	if err != nil {
+		panic(err)
+	}
+
+	buf, err := io.ReadAll(conn)
+	if err != nil {
+		panic(err)
+	}
+
+	name, file, _ := bytes.Cut(buf, []byte("\n"))
+
+	os.WriteFile(string(name), file, os.ModePerm)
+}
+
 func main() {
 	flag.Parse()
 
@@ -32,19 +72,20 @@ func main() {
 
 	command := args[0]
 
-	conn := handleConnection()
+	switch command {
+	case "list":
+		handleList()
+	case "down":
+		if len(args) == 1 {
+			fmt.Println("Usage: file_server_client down <n>")
+			return
+		}
 
-	_, err := conn.Write([]byte(command))
-	if err != nil {
-		panic(err)
+		pos, _ := strconv.Atoi(args[1])
+		handleDown(pos)
+	default:
+		fmt.Println("Usage: file_server_client <command>")
+		fmt.Println("Commands: list down up")
+		flag.PrintDefaults()
 	}
-
-	buf := make([]byte, 1024)
-
-	_, err = conn.Read(buf)
-	if err != nil {
-		panic(err)
-	}
-
-	fmt.Println(string(buf))
 }
