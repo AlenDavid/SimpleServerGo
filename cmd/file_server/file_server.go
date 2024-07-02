@@ -63,6 +63,14 @@ func handleDownload(conn net.Conn, pos int) error {
 	return nil
 }
 
+func handleUpload(conn net.Conn, name string, file []byte) error {
+	os.WriteFile("./public/"+name, file, os.ModePerm)
+
+	conn.Write([]byte("OK"))
+
+	return nil
+}
+
 func handleConnection(conn net.Conn) error {
 	fmt.Println("new connection")
 	defer conn.Close()
@@ -89,6 +97,18 @@ func handleConnection(conn net.Conn) error {
 		}
 
 		return handleDownload(conn, pos)
+	}
+
+	if strings.HasPrefix(string(buf), "up") {
+		response := bytes.Split(buf, []byte(" "))
+		if len(response) < 3 {
+			return errors.New("unknown params for up command")
+		}
+
+		name := response[1]
+		file := response[2]
+
+		return handleUpload(conn, string(name), file)
 	}
 
 	return errors.New("unknown command")

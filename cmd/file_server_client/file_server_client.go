@@ -60,6 +60,26 @@ func handleDown(pos int) {
 	os.WriteFile(string(name), file, os.ModePerm)
 }
 
+func handleUpload(path string) {
+	file, err := os.ReadFile(path)
+	if err != nil {
+		panic(err)
+	}
+
+	conn := handleConnection()
+
+	req := make([]byte, 0)
+
+	req = append(req, []byte(fmt.Sprintf("up %s ", path))...)
+	req = append(req, file...)
+
+	_, err = conn.Write(req)
+	if err != nil {
+		panic(err)
+	}
+
+}
+
 func main() {
 	flag.Parse()
 
@@ -75,6 +95,13 @@ func main() {
 	switch command {
 	case "list":
 		handleList()
+	case "up":
+		if len(args) == 1 {
+			fmt.Println("Usage: file_server_client up <path_to_file>")
+			return
+		}
+
+		handleUpload(args[1])
 	case "down":
 		if len(args) == 1 {
 			fmt.Println("Usage: file_server_client down <n>")
