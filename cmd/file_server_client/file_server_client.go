@@ -1,11 +1,12 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"net"
 )
 
-func main() {
+func handleConnection() *net.TCPConn {
 	tcpServer, err := net.ResolveTCPAddr("tcp", "0.0.0.0:5050")
 	if err != nil {
 		panic(err)
@@ -16,7 +17,24 @@ func main() {
 		panic(err)
 	}
 
-	_, err = conn.Write([]byte("list"))
+	return conn
+}
+
+func main() {
+	flag.Parse()
+
+	args := flag.Args()
+
+	if len(args) == 0 {
+		fmt.Println("Usage: file_server_client <command>")
+		flag.PrintDefaults()
+	}
+
+	command := args[0]
+
+	conn := handleConnection()
+
+	_, err := conn.Write([]byte(command))
 	if err != nil {
 		panic(err)
 	}

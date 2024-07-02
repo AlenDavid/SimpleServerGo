@@ -1,21 +1,14 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"net"
 	"os"
 	"strings"
 )
 
-func handleConnection(conn net.Conn) error {
-	defer conn.Close()
-
-	buf := make([]byte, 1024)
-
-	if _, err := conn.Read(buf); err != nil {
-		return err
-	}
-
+func handleList(conn net.Conn) error {
 	entries, err := os.ReadDir("./public")
 	if err != nil {
 		return err
@@ -32,6 +25,23 @@ func handleConnection(conn net.Conn) error {
 	conn.Write([]byte(strings.Join(list, "\n")))
 
 	return nil
+}
+
+func handleConnection(conn net.Conn) error {
+	fmt.Println("new connection")
+	defer conn.Close()
+
+	buf := make([]byte, 1024)
+
+	if _, err := conn.Read(buf); err != nil {
+		return err
+	}
+
+	if strings.HasPrefix(string(buf), "list") {
+		return handleList(conn)
+	}
+
+	return errors.New("unknown command")
 }
 
 func main() {
